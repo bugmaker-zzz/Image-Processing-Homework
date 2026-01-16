@@ -21,7 +21,7 @@ class HandDetector:
         options = vision.HandLandmarkerOptions(
             base_options=base_options,
             running_mode=RunningMode.IMAGE,
-            num_hands=1,
+            num_hands=2,
             min_hand_detection_confidence=0.7,
             min_hand_presence_confidence=0.5
         )
@@ -86,6 +86,10 @@ class HandDetector:
         """核心逻辑：判断手指状态并返回手势名称"""
         if not self.results or not self.results.hand_landmarks:
             return "NO HAND"
+        
+        # 如果检测到两只手或以上，返回特殊标记
+        if len(self.results.hand_landmarks) >= 2:
+            return "TWO_HANDS"
 
         hand_landmarks = self.results.hand_landmarks[0]
         lm_list = []

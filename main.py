@@ -64,6 +64,7 @@ class GestureFilterSystem:
         print("\n其他手势:")
         print("  FIST  → 不改变滤镜")
         print("  PALM  → 不改变滤镜")
+        print("  两只手同时出现 → 取消滤镜（变为原图）")
         print("\n特殊功能:")
         print("  PALM → FIST → 延迟2秒后拍照保存")
         print("\n控制按键:")
@@ -76,20 +77,24 @@ class GestureFilterSystem:
         frame = self.hand_detector.find_hands(frame, draw=True)
         self.current_gesture = self.hand_detector.get_gesture(frame)
         
-        # 2. 只有在做出数字手势（ONE/TWO/THREE/FOUR）时才改变滤镜
-        if self.current_gesture in ["ONE", "TWO", "THREE", "FOUR"]:
+        # 2. 如果检测到两只手，取消滤镜，使用原图
+        if self.current_gesture == "TWO_HANDS":
+            self.current_filter = "original"
+            self.last_filter_gesture = None
+        # 3. 只有在做出数字手势（ONE/TWO/THREE/FOUR）时才改变滤镜
+        elif self.current_gesture in ["ONE", "TWO", "THREE", "FOUR"]:
             # 检测到新的数字手势（与上一次改变的手势不同）
             if self.last_filter_gesture != self.current_gesture:
                 self.last_filter_gesture = self.current_gesture
                 self.current_filter = self.filter_controller.update_by_gesture(self.current_gesture)
         
-        # 3. 检测拍照手势序列 (PALM -> FIST)
+        # 4. 检测拍照手势序列 (PALM -> FIST)
         should_trigger_photo = self._check_photo_gesture_sequence()
         if should_trigger_photo:
             self.photo_triggered = True
             self.photo_trigger_time = time.time()
         
-        # 4. 检查延迟拍照是否到达
+        # 5. 检查延迟拍照是否到达
         should_take_photo = False
         if self.photo_triggered:
             elapsed = time.time() - self.photo_trigger_time
@@ -97,16 +102,16 @@ class GestureFilterSystem:
                 should_take_photo = True
                 self.photo_triggered = False
         
-        # 5. 应用滤镜
+        # 6. 应用滤镜
         processed_frame = self.image_filter.apply_filter(frame.copy(), self.current_filter)
         
-        # 6. 保存无UI版本用于拍照
+        # 7. 保存无UI版本用于拍照
         self.clean_frame = processed_frame.copy()
         
-        # 7. 添加信息叠加层（仅用于显示）
+        # 8. 添加信息叠加层（仅用于显示）
         display_frame = self._add_ui_overlay(processed_frame.copy())
         
-        # 8. 如果拍照时间到达，则拍照（使用无UI版本）
+        # 9. 如果拍照时间到达，则拍照（使用无UI版本）
         if should_take_photo:
             self.save_frame(self.clean_frame, is_photo=True)
         
@@ -147,8 +152,10 @@ class GestureFilterSystem:
         # 手势信息
         gesture_color = (0, 255, 0) if self.current_gesture != "NO HAND" else (0, 0, 255)
         
-        # 区分是否是数字手势
-        if self.current_gesture in ["ONE", "TWO", "THREE", "FOUR"]:
+        # 区分不同手势类型的显示
+        if self.current_gesture == "TWO_HANDS":
+            gesture_text = f'Gesture: {self.current_gesture} (Filter Cancelled)'
+        elif self.current_gesture in ["ONE", "TWO", "THREE", "FOUR"]:
             gesture_text = f'Gesture: {self.current_gesture} (Filter Changed)'
         else:
             gesture_text = f'Gesture: {self.current_gesture}'
@@ -181,7 +188,7 @@ class GestureFilterSystem:
                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
         
         # 下方帮助信息
-        help_text = "Q:Quit | Space:Save | PALM+FIST:Photo(2s delay)"
+        help_text = "Q:Quit | Space:Save | PALM+FIST:Photo(2s delay) | 2Hands:Cancel Filter"
         cv2.putText(frame, help_text, (15, h - 15),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
         
