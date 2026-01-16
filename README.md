@@ -60,7 +60,7 @@ pip install -r requirements.txt
 python main.py
 ```
 
-系统将启动本地摄像头，实时识别手势并应用滤镜效果。
+系统将启动本地摄像头，使用右手比划手势，实时识别手势并应用滤镜效果。
 
 ### 运行演示模式
 
@@ -98,6 +98,7 @@ python main.py --mode image --img_path ./data/input/apple.png
 | **FIST** (握拳) | 保持当前滤镜不变 |
 | **PALM** (张开手掌) | 保持当前滤镜不变 |
 | **PALM → FIST** | 触发拍照，延迟 2 秒后自动捕获 |
+| **双手同时出现** | 取消滤镜 |
 
 ---
 
