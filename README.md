@@ -34,7 +34,7 @@ numpy
 ### 1. 克隆/下载项目
 
 ```bash
-git clone
+git clone https://github.com/bugmaker-zzz/Image-Processing-Homework.git
 ```
 
 ### 2. 创建虚拟环境
