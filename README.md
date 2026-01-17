@@ -121,7 +121,7 @@ your_workspace/
 │
 ├── utils/
 │   ├── __init__.py
-│   ├── gesturedetector.py  # 手势识别模块 (MediaPipe)
+│   ├── gesturedetector.py  # 手势识别模块(MediaPipe)
 │   └── imagefilter.py      # 图像滤镜模块
 │
 └── data/
