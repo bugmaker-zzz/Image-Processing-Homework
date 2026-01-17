@@ -75,7 +75,7 @@ class GestureFilterSystem:
         """处理单帧图像"""
         # 1. 手势检测
         frame = self.hand_detector.find_hands(frame, draw=True)
-        self.current_gesture = self.hand_detector.get_gesture(frame)
+        self.current_gesture, _ = self.hand_detector.get_gesture(frame)
         
         # 2. 如果检测到两只手，取消滤镜，使用原图
         if self.current_gesture == "TWO_HANDS":
@@ -164,7 +164,7 @@ class GestureFilterSystem:
                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, gesture_color, 2)
         
         # 滤镜名称 - 显示当前持久化的滤镜
-        cv2.putText(frame, f'Current Filter: {self.current_filter}', (10, 50),
+        cv2.putText(frame, f'Current Filter: {self.current_filter}', (10, 55),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
         
         # 拍照倒计时
@@ -312,6 +312,9 @@ def main():
                        help="运行模式 (realtime: 实时视频, image: 图片处理)")
     parser.add_argument("--img_path", default="./data/input/apple.png", type=str,
                        help="图片路径(仅image模式需要)")
+    # original:原图；histogram_equalization:直方图均衡化；flowing_years:流年特效；grayscale:灰度特效；sepia:怀旧特效
+    parser.add_argument("--filter", default="original", choices=["original", "histogram_equalization", "flowing_years", "grayscale", "sepia"],
+                       help="滤镜类型(仅image模式需要)")
     
     args = parser.parse_args()
     
@@ -327,11 +330,10 @@ def main():
                 return
             frame = cv2.imread(args.img_path)
             system = GestureFilterSystem()
-            # original:原图；histogram_equalization:直方图均衡化；flowing_years:流年特效；grayscale:灰度特效；sepia:怀旧特效
-            processed_frame = system.image_filter.apply_filter(frame.copy(), "grayscale")
+            processed_frame = system.image_filter.apply_filter(frame.copy(), args.filter)
             # 保存结果
             timestamp = time.strftime("%Y%m%d_%H%M%S")
-            filename = f"./data/output/photo_{timestamp}_grayscale.jpg"
+            filename = f"./data/output/photo_{timestamp}_{args.filter}.jpg"
             cv2.imwrite(filename, processed_frame)
             cv2.imshow("Gesture-based Image Filter System - Image Mode", processed_frame)
             print("按任意键关闭图片窗口...")
