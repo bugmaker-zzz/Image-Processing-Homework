@@ -1,5 +1,5 @@
 """
-基于手势识别的智能图像滤镜切换系统
+基于手势识别的智能图像系统
 主入口程序
 
 功能：
@@ -29,8 +29,10 @@ from utils.imagefilter import ImageFilter, FilterController, add_filter_info_ove
 class GestureFilterSystem:
     """基于手势识别的图像滤镜系统"""
     
-    def __init__(self):
-        """初始化系统"""
+    def __init__(self, save_path: str = "./data/output"):
+        """初始化系统
+        :param save_path: 保存拍照/截图的目录
+        """
         self.hand_detector = HandDetector()
         self.image_filter = ImageFilter()
         self.filter_controller = FilterController()
@@ -52,6 +54,8 @@ class GestureFilterSystem:
         
         # 保存无UI的干净版本
         self.clean_frame = None  # 保存最后一帧的无UI版本
+        # 保存路径
+        self.save_path = save_path
         
         print("="*60)
         print("基于手势识别的智能图像滤镜切换系统")
@@ -196,13 +200,13 @@ class GestureFilterSystem:
     
     def save_frame(self, frame, is_photo=False):
         """保存当前帧到文件"""
-        output_dir = "./data/output"
+        output_dir = self.save_path
         os.makedirs(output_dir, exist_ok=True)
-        
+
         timestamp = time.strftime("%Y%m%d_%H%M%S")
         prefix = "photo" if is_photo else "screenshot"
         filename = f"{output_dir}/{prefix}_{timestamp}_{self.current_filter}.jpg"
-        
+
         cv2.imwrite(filename, frame)
         
         if is_photo:
@@ -310,11 +314,13 @@ def main():
                        help="运行演示模式 (显示所有滤镜效果)")
     parser.add_argument("--mode", default="realtime", choices=["realtime", "image"],
                        help="运行模式 (realtime: 实时视频, image: 图片处理)")
-    parser.add_argument("--img_path", default="./data/input/apple.png", type=str,
+    parser.add_argument("--img_path", default="./data/input/lena.png", type=str,
                        help="图片路径(仅image模式需要)")
     # original:原图；histogram_equalization:直方图均衡化；flowing_years:流年特效；grayscale:灰度特效；sepia:怀旧特效
     parser.add_argument("--filter", default="original", choices=["original", "histogram_equalization", "flowing_years", "grayscale", "sepia"],
                        help="滤镜类型(仅image模式需要)")
+    parser.add_argument("--save_path", default="./data/output", type=str,
+                       help="保存图片的路径")
     
     args = parser.parse_args()
     
@@ -322,18 +328,18 @@ def main():
         run_demo_mode()
     else:
         if args.mode == "realtime":
-            system = GestureFilterSystem()
+            system = GestureFilterSystem(args.save_path)
             system.run()
         elif args.mode == "image":
             if not os.path.exists(args.img_path):
                 print(f"✗ 图片不存在: {args.img_path}")
                 return
             frame = cv2.imread(args.img_path)
-            system = GestureFilterSystem()
+            system = GestureFilterSystem(args.save_path)
             processed_frame = system.image_filter.apply_filter(frame.copy(), args.filter)
             # 保存结果
             timestamp = time.strftime("%Y%m%d_%H%M%S")
-            filename = f"./data/output/photo_{timestamp}_{args.filter}.jpg"
+            filename = f"{args.save_path}/photo_{timestamp}_{args.filter}.jpg"
             cv2.imwrite(filename, processed_frame)
             cv2.imshow("Gesture-based Image Filter System - Image Mode", processed_frame)
             print("按任意键关闭图片窗口...")

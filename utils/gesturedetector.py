@@ -39,7 +39,7 @@ class HandDetector:
         options = vision.HandLandmarkerOptions(
             base_options=base_options,
             running_mode=RunningMode.IMAGE,
-            num_hands=2,  # 建议先设为1，确保控制逻辑稳定
+            num_hands=2, 
             min_hand_detection_confidence=0.7,
             min_hand_presence_confidence=0.5
         )
@@ -148,16 +148,12 @@ class HandDetector:
                 fingers.append(1)
             else:
                 fingers.append(0)
-
-        # --- 核心修改：基于组合逻辑的宽容判定 ---
         
         # 统计除拇指外的 4 根手指伸出的数量
-        # fingers[1:] 就是 [食指, 中指, 无名指, 小指]
+        # fingers[1:] 为 [食指, 中指, 无名指, 小指]
         four_fingers_count = fingers[1:].count(1)
         
         gesture = "UNKNOWN"
-        
-        # 判定优先级逻辑：
         
         # FIST (拳头) 优化：
         # 只要 4 根主手指都缩回去 (four_fingers_count == 0)，就算拳头
@@ -172,7 +168,7 @@ class HandDetector:
         elif four_fingers_count == 4 and fingers[0] == 0:
             gesture = "FOUR"
             
-        # TWO (剪刀手)：食指+中指伸出，无名指+小指弯曲
+        # TWO (二指)：食指+中指伸出，无名指+小指弯曲
         elif fingers[1]==1 and fingers[2]==1 and fingers[3]==0 and fingers[4]==0:
             gesture = "TWO"
             
@@ -180,7 +176,7 @@ class HandDetector:
         elif fingers[1]==1 and fingers[2]==0 and fingers[3]==0 and fingers[4]==0:
             gesture = "ONE"
             
-        # THREE (三指/OK)：食指+中指+无名指
+        # THREE (三指)：食指+中指+无名指
         elif fingers[1]==1 and fingers[2]==1 and fingers[3]==1 and fingers[4]==0:
             gesture = "THREE"
         

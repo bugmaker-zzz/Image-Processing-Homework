@@ -694,8 +694,12 @@ def run_video_mode():
     detector = HandDetector()
     p_time = 0
 
+    # 确保输出目录存在 (防止 imwrite 失败)
+    if not os.path.exists("./data/output"):
+        os.makedirs("./data/output")
+
     print(">>> 视频模式已启动。请对着摄像头做手势...")
-    print(">>> 按 'q' 键退出")
+    print(">>> 按 'q' 键退出，按 '空格' 键保存截图")
 
     while True:
         success, img = cap.read()
@@ -717,9 +721,6 @@ def run_video_mode():
         fps = 1 / (c_time - p_time) if (c_time - p_time) > 0 else 0
         p_time = c_time
         
-        # 绘制背景板让文字更清晰
-        cv2.rectangle(img, (0,0), (250, 120), (0,0,0), cv2.FILLED)
-        
         cv2.putText(img, f'FPS: {int(fps)}', (10, 30), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
         
@@ -733,9 +734,18 @@ def run_video_mode():
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
 
         cv2.imshow("Hand Gesture Test", img)
+        
+        # 1. 只获取一次按键
+        key = cv2.waitKey(1) & 0xFF
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        # 2. 对同一个 key 变量进行多次判断
+        if key == ord('q'):
             break
+        elif key == ord(' '):
+            # 添加保存逻辑
+            filename = f'./data/output/gesture_{gesture}_{int(time.time())}.jpg'
+            cv2.imwrite(filename, img)
+            print(f"已保存截图: {filename}") # 打印提示，让你知道保存成功了
 
     cap.release()
     cv2.destroyAllWindows()
